@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
 from time import sleep
+import API_Mail
 
 # I/O Pins
 btnMail = 16
@@ -38,10 +39,15 @@ def callbackFunc(channel):
             print("entmneommen " + value)
             status = False
     except:
-        raise ValueError ("Callback blocked")
+        API_Mail.send_error(Exception.Errorcode)
+        raise ValueError ("Callback not complete")
         
     # send data
-
+    try:
+        API_mail.send_status(value, status)
+    except:
+        API_Mail.send_error(Exception.Errorcode)
+    
 # Definition of Pins
 GPIO.add_event_detect(btnMail, GPIO.BOTH, callback = callbackFunc, bouncetime=bncTime)
 GPIO.add_event_detect(btnDoor, GPIO.BOTH, callback = callbackFunc, bouncetime=bncTime)
