@@ -1,1 +1,0 @@
-pip instal RPi.GPIO
