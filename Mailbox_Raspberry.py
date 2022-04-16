@@ -21,19 +21,26 @@ GPIO.setup(outpLED, GPIO.OUT)
 
 # Callback Function
 def callbackFunc(channel):
-    if channel == btnMail:
-        value = "Brieffach"
-    elif channel == btnDoor:
-        value = "Briefkastentür"
-    elif channel == btnParcel:
-        value = "Paketfach"
-    else:
-        raise Exception
-    
-    if GPIO.input(channel):
-        print("Empfangen " + value)
-    else:
-        print("entmneommen " + value)
+    try:
+        if channel == btnMail:
+            value = "Brieffach"
+        elif channel == btnDoor:
+            value = "Briefkastentür"
+        elif channel == btnParcel:
+            value = "Paketfach"
+        else:
+            raise Exception
+
+        if GPIO.input(channel):
+            print("Empfangen " + value)
+            status = True
+        else:
+            print("entmneommen " + value)
+            status = False
+    except:
+        raise ValueError ("Callback blocked")
+        
+    # send data
 
 # Definition of Pins
 GPIO.add_event_detect(btnMail, GPIO.BOTH, callback = callbackFunc, bouncetime=bncTime)
