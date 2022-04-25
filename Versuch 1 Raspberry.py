@@ -1,9 +1,6 @@
 import RPi.GPIO as GPIO
 from time import sleep
-# import API_Mail
-from datetime import datetime
-import requests
-import json
+import API_Mail
 
 url_Mail = "https://briefkasten.azurewebsites.net/briefkasten/brief/post"
 url_Parcel = "https://briefkasten.azurewebsites.net/briefkasten/paket/post"
@@ -32,81 +29,59 @@ GPIO.setup(btnDoorParcel, GPIO.IN)
 # Callback Function
 def callbackFuncMail(channel):
     try:
-        if channel == btnMail:
-            value = "Brieffach"
-        elif channel == btnDoorMail:
-            value = "Briefkastentuer"
-        else:
-            raise Exception
-
         if GPIO.input(channel):
-            message_change = "empfangen " + value
+            message_change = "Empfangen"# + value
             status = True
         else:
-            message_change = "entnommen " + value
+            message_change = "Entnommen"# + value
             status = False
-        
-        time = (datetime.now().strftime("%d-%m-%Y--%H:%M:%S"))
-        data = {"message_change" : message_change,
-                "brieffach" : GPIO.input(btnMail),
-                "briefkastentuere" : GPIO.input(btnDoorMail),
-                "zeitstempel" : time,
-                }
-     
-        response = requests.post(url_Mail, data = json.dumps(data), headers = headers)
-    
-        #print(response.status_code)
-        print(response.content)
-
+        API_Mail.send_status_mail(message_change,GPIO.input(btnMail),GPIO.input(btnDoorMail))
     except:
-        errorHandler(response.status_code)
+        print("HELLO")
+
+def callbackFuncMailDoor(channel):
+    try:
+        if GPIO.input(channel):
+            message_change = "Empfangen"# + value
+            status = True
+        else:
+            message_change = "Entnommen"# + value
+            status = False
+        API_Mail.send_status_mail_Door(message_change,GPIO.input(btnDoorMail))
+    except:
+        print("HELLO")
+
 
 def callbackFuncParcel(channel):
     try:
-        if channel == btnParcel:
-            value = "Paketfach"
-        elif channel == btnDoorParcel:
-            value = "Pakettuer"
-        else:
-            raise Exception
-
         if GPIO.input(channel):
-            message_change = "empfangen " + value
+            message_change = "Empfangen" #+ value
             status = True
         else:
-            message_change = "entnommen " + value
+            message_change = "Entnommen" #+ value
             status = False
-        
-        time = (datetime.now().strftime("%d-%m-%Y--%H:%M:%S"))
-        data = {"message_change" : message_change,
-                "packetfach" : GPIO.input(btnParcel),
-                "pakettuer" : GPIO.input(btnDoorParcel),
-                "zeitstempel" : time,
-                }
-     
-        response = requests.post(url_Parcel, data = json.dumps(data), headers = headers)
-    
-        #print(response.status_code)
-        print(response.content)
-
+        API_Mail.send_status_parcel(message_change,GPIO.input(btnParcel),GPIO.input(btnDoorParcel))
     except:
-         print("HELLO" + str(data))
-         errorHandler(response.status_code)
+         print("HELLO")
          
-         
-def errorHandler(Errorcode):
+def callbackFuncParcelDoor(channel):
     try:
-        with open("errors.txt", "a") as f:
-            f.write(Errorcode)
+        if GPIO.input(channel):
+            message_change = "Empfangen" #+ value
+            status = True
+        else:
+            message_change = "Entnommen" #+ value
+            status = False
+        API_Mail.send_status_parcel_Door(message_change,GPIO.input(btnDoorParcel))
     except:
-        print("No file created")
+         print("HELLO")
         
 # Definition of action set by change of PIN status
 
 GPIO.add_event_detect(btnMail, GPIO.BOTH, callback = callbackFuncMail, bouncetime=bncTime)
-GPIO.add_event_detect(btnDoorMail, GPIO.BOTH, callback = callbackFuncMail, bouncetime=bncTime)
+GPIO.add_event_detect(btnDoorMail, GPIO.BOTH, callback = callbackFuncMailDoor, bouncetime=bncTime)
 GPIO.add_event_detect(btnParcel, GPIO.BOTH, callback = callbackFuncParcel, bouncetime=bncTime)
-GPIO.add_event_detect(btnDoorParcel, GPIO.BOTH, callback = callbackFuncParcel, bouncetime=bncTime)
+GPIO.add_event_detect(btnDoorParcel, GPIO.BOTH, callback = callbackFuncParcelDoor, bouncetime=bncTime)
 
 # Main programm
 while True:
