@@ -1,78 +1,116 @@
 import RPi.GPIO as GPIO
 from time import sleep
-import API_Mail
+# import API_Mail
+from datetime import datetime
 import requests
 import json
-from datetime import datetime
 
-
-url = "   "
-header = {"Content-Type" : "application/json"}
+url_Mail = "https://briefkasten.azurewebsites.net/briefkasten/brief/post"
+url_Parcel = "https://briefkasten.azurewebsites.net/briefkasten/paket/post"
+headers = {"Content-Type" : "application/json"}
 
 
 # I/O Pins
 btnMail = 17
-btnDoor = 27
+btnDoorMail = 27
 btnParcel = 22
-outpLED =  5
+btnDoorParcel = 12
 
 # gerenal Variables
 
-bncTime = 5000 # time in ms
+bncTime = 50 # time in ms
+slpTime = 0.9 # time in ms
 
 # GPIO setup
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup(btnMail, GPIO.IN)
-GPIO.setup(btnDoor, GPIO.IN)
+GPIO.setup(btnDoorMail, GPIO.IN)
 GPIO.setup(btnParcel, GPIO.IN)
-GPIO.setup(outpLED, GPIO.OUT)
+GPIO.setup(btnDoorParcel, GPIO.IN)
 
 # Callback Function
-def callbackFunc(channel):
+def callbackFuncMail(channel):
     try:
         if channel == btnMail:
             value = "Brieffach"
-        elif channel == btnDoor:
-            value = "Briefkastentür"
-        elif channel == btnParcel:
-            value = "Paketfach"
+        elif channel == btnDoorMail:
+            value = "Briefkastentuer"
         else:
             raise Exception
 
         if GPIO.input(channel):
-            message_change = "Empfangen " + value
+            message_change = "empfangen " + value
             status = True
         else:
             message_change = "entnommen " + value
             status = False
-            
+        
+        time = (datetime.now().strftime("%d-%m-%Y--%H:%M:%S"))
         data = {"message_change" : message_change,
                 "brieffach" : GPIO.input(btnMail),
-                "briefkastentuere" : GPIO.input(btnDoor),
-                "packetfach" : GPIO.input(btnParcel),
-                "zeitstempel" : datetime.now()
+                "briefkastentuere" : GPIO.input(btnDoorMail),
+                "zeitstempel" : time,
                 }
-        response = requests.post(url, data=json.dumps(data), headers=headers)
-        
-    except:
-        API_Mail.send_error(Exception.Errorcode)
-        raise ValueError ("Callback not complete")
-        
-    # send data
-    try:
-        API_mail.send_status(value, status)
-    except:
-        API_Mail.send_error(Exception.Errorcode)
+     
+        response = requests.post(url_Mail, data = json.dumps(data), headers = headers)
     
-# Definition of Pins
-GPIO.add_event_detect(btnMail, GPIO.BOTH, callback = callbackFunc, bouncetime=bncTime)
-GPIO.add_event_detect(btnDoor, GPIO.BOTH, callback = callbackFunc, bouncetime=bncTime)
-GPIO.add_event_detect(btnParcel, GPIO.BOTH, callback = callbackFunc, bouncetime=bncTime)
+        #print(response.status_code)
+        print(response.content)
+
+    except:
+        errorHandler(response.status_code)
+
+def callbackFuncParcel(channel):
+    try:
+        if channel == btnParcel:
+            value = "Paketfach"
+        elif channel == btnDoorParcel:
+            value = "Pakettuer"
+        else:
+            raise Exception
+
+        if GPIO.input(channel):
+            message_change = "empfangen " + value
+            status = True
+        else:
+            message_change = "entnommen " + value
+            status = False
+        
+        time = (datetime.now().strftime("%d-%m-%Y--%H:%M:%S"))
+        data = {"message_change" : message_change,
+                "packetfach" : GPIO.input(btnParcel),
+                "pakettuer" : GPIO.input(btnDoorParcel),
+                "zeitstempel" : time,
+                }
+     
+        response = requests.post(url_Parcel, data = json.dumps(data), headers = headers)
+    
+        #print(response.status_code)
+        print(response.content)
+
+    except:
+         print("HELLO" + str(data))
+         errorHandler(response.status_code)
+         
+         
+def errorHandler(Errorcode):
+    try:
+        with open("errors.txt", "a") as f:
+            f.write(Errorcode)
+    except:
+        print("No file created")
+        
+# Definition of action set by change of PIN status
+
+GPIO.add_event_detect(btnMail, GPIO.BOTH, callback = callbackFuncMail, bouncetime=bncTime)
+GPIO.add_event_detect(btnDoorMail, GPIO.BOTH, callback = callbackFuncMail, bouncetime=bncTime)
+GPIO.add_event_detect(btnParcel, GPIO.BOTH, callback = callbackFuncParcel, bouncetime=bncTime)
+GPIO.add_event_detect(btnDoorParcel, GPIO.BOTH, callback = callbackFuncParcel, bouncetime=bncTime)
 
 # Main programm
 while True:
     try:
-        sleep(0.1)
+        sleep(slpTime)
     except:
         GPIO.cleanup()
