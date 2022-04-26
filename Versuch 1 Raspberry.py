@@ -2,10 +2,6 @@ import RPi.GPIO as GPIO
 from time import sleep
 import API_Mail
 
-url_Mail = "https://briefkasten.azurewebsites.net/briefkasten/brief/post"
-url_Parcel = "https://briefkasten.azurewebsites.net/briefkasten/paket/post"
-headers = {"Content-Type" : "application/json"}
-
 
 # I/O Pins
 btnMail = 17
@@ -17,6 +13,10 @@ btnDoorParcel = 12
 
 bncTime = 50 # time in ms
 slpTime = 0.9 # time in ms
+msgDoorOpen = "Offen"
+msgDoorClosed = "Geschlossen"
+msgRecived = "Empfangen"
+msgRemoved = "Entnommen"
 
 # GPIO setup
 GPIO.setmode(GPIO.BCM)
@@ -30,11 +30,9 @@ GPIO.setup(btnDoorParcel, GPIO.IN)
 def callbackFuncMail(channel):
     try:
         if GPIO.input(channel):
-            message_change = "Empfangen"# + value
-            status = True
+            message_change = msgRecived
         else:
-            message_change = "Entnommen"# + value
-            status = False
+            message_change = msgRemoved
         API_Mail.send_status_mail(message_change,GPIO.input(btnMail),GPIO.input(btnDoorMail))
     except:
         print("HELLO")
@@ -42,11 +40,9 @@ def callbackFuncMail(channel):
 def callbackFuncMailDoor(channel):
     try:
         if GPIO.input(channel):
-            message_change = "Empfangen"# + value
-            status = True
+            message_change = msgDoorOpen
         else:
-            message_change = "Entnommen"# + value
-            status = False
+            message_change = msgDoorClosed
         API_Mail.send_status_mail_Door(message_change,GPIO.input(btnDoorMail))
     except:
         print("HELLO")
@@ -55,23 +51,19 @@ def callbackFuncMailDoor(channel):
 def callbackFuncParcel(channel):
     try:
         if GPIO.input(channel):
-            message_change = "Empfangen" #+ value
-            status = True
+            message_change = msgRecived
         else:
-            message_change = "Entnommen" #+ value
-            status = False
-        API_Mail.send_status_parcel(message_change,GPIO.input(btnParcel),GPIO.input(btnDoorParcel))
+            message_change = msgRemoved
+        API_Mail.send_status_parcel(message_change,GPIO.input(btnParcel))
     except:
          print("HELLO")
          
 def callbackFuncParcelDoor(channel):
     try:
         if GPIO.input(channel):
-            message_change = "Empfangen" #+ value
-            status = True
+            message_change = msgDoorOpen
         else:
-            message_change = "Entnommen" #+ value
-            status = False
+            message_change = msgDoorClosed
         API_Mail.send_status_parcel_Door(message_change,GPIO.input(btnDoorParcel))
     except:
          print("HELLO")
