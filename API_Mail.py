@@ -75,12 +75,12 @@ None
     try:
         response = requests.post(url_Mail, data = json.dumps(data), headers = headers)
     except:
-        raise ValueError("Wrong response")
+        raise ValueError("Wrong response from mail URL. Send data not succesful.")
     
     
 # send status of parcel box to url
 def send_status_parcel(Message_change,StatusParcel):
-    """end status Parcel to URL
+    """send status Parcel to URL
 
 Input variabels:
 Change message (incoming/outgoing)
@@ -96,7 +96,7 @@ None
     try:
         response = requests.post(url_Parcel, data = json.dumps(data), headers = headers)
     except:
-        raise ValueError("Wrong response")
+        raise ValueError("Wrong response from parcel URL. Send data not succesful.")
     
 def send_status_mail_Door(Message_change,StatusMailDoor):
     """end status mailboxdoor to URL
@@ -115,10 +115,10 @@ None
     try:
         response = requests.post(url_Mail_Door, data = json.dumps(data), headers = headers)
     except:
-        raise ValueError("Wrong response")
+        raise ValueError("Wrong response from mailbox door URL. Send data not succesful.")
     
 def send_status_parcel_Door(Message_change,StatusParcelDoor):
-    """end status parcel door to URL
+    """send status parcel door to URL
 
 Input variabels:
 Change message (open/close)
@@ -128,10 +128,35 @@ Output:
 None
 """
     try:
-        data = jsonData("packetfach",Message_change,StatusParcelDoor)
+        data = jsonData("packetfachtuere",Message_change,StatusParcelDoor)
     except:
         raise ValueError("Wrong format of data to transmit")
     try:
         response = requests.post(url_Parcel_Door, data = json.dumps(data), headers = headers)
     except:
-        raise ValueError("Wrong response")
+        raise ValueError("Wrong response from parcel door URL. Send data not succesful.")
+    
+def send_status(MailboxPart,Message_change,InputStatus,API_Url):
+    """send status parcel door to URL
+
+Input variabels:
+MailboxPart -> which part of the mailbox is effected
+Change message (open/close/recived/removed)
+Status of input (int) -> 0/1
+url -> where to send
+
+Output:
+None
+"""
+    try:
+        data = {"status" : Message,
+                MailboxPart : StatusJson,
+                "time" : datetime.now().strftime("%H:%M:%S"),
+                "date" : datetime.now().strftime("%d-%m-%Y"),
+                }
+    except:
+        raise ValueError("Wrong format of data to transmit")
+    try:
+        response = requests.post(API_Url, data = json.dumps(data), headers = headers)
+    except:
+        raise ValueError("Wrong response from URL. Send data not succesful.")
