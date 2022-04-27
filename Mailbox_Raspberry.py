@@ -8,10 +8,10 @@ btnDoorMail = 27
 btnParcel = 22
 btnDoorParcel = 12
 
-ledProgRun = 5
-ledSend = 6
-ledSendError = 13
-ledGeneralError = 26
+ledProgRun = 25
+ledSend = 23
+ledSendError = 24
+ledGeneralError = 8
 
 # set URL for API
 
@@ -22,9 +22,14 @@ url_Parcel_Door = "https://briefkasten.azurewebsites.net/briefkasten/pakettuere/
 
 # gerenal Variables
 
-bncTime = 50 # time in ms
+bncTime = 500 # time in ms
 slpTime = 0.9 # time in seconds
-flashTime = 0.5 # time in seconds
+flashTime = 0.2 # time in seconds
+
+msgMailArrived = "Recived"
+msgMailPicked = "Picked up"
+msgDoorOpen = "Door open"
+msgDoorClosed = "Door closed"
 
 # GPIO setup
 GPIO.setmode(GPIO.BCM)
@@ -48,9 +53,9 @@ def flashLed(Channel):
 def callbackFuncMail(channel):
     try:
         if GPIO.input(channel):
-            message = "Empfangen"# + value
+            message = msgMailArrived
         else:
-            message = "Entnommen"# + value
+            message = msgMailPicked
         # API_Mail.send_status_mail(message_change,GPIO.input(btnMail),GPIO.input(btnDoorMail))
         API_Mail.send_status(message,"brieffach",GPIO.input(btnMail),url_Mail)
         flashLed(ledSend)
@@ -60,9 +65,9 @@ def callbackFuncMail(channel):
 def callbackFuncMailDoor(channel):
     try:
         if GPIO.input(channel):
-            message_change = "Offen"# + value
+            message_change = msgDoorOpen
         else:
-            message_change = "Geschlossen"# + value
+            message_change = msgDoorClosed
         # API_Mail.send_status_mail_Door(message_change,GPIO.input(btnDoorMail))
         API_Mail.send_status(message,"briefkastentuere",GPIO.input(btnDoorMail),url_Mail_Door)
         flashLed(ledSend)
@@ -72,9 +77,9 @@ def callbackFuncMailDoor(channel):
 def callbackFuncParcel(channel):
     try:
         if GPIO.input(channel):
-            message_change = "Empfangen" #+ value
+            message_change = msgMailArrived
         else:
-            message_change = "Entnommen" #+ value
+            message_change = msgMailPicked
         #API_Mail.send_status_parcel(message_change,GPIO.input(btnParcel),GPIO.input(btnDoorParcel))
         API_Mail.send_status(message,"packetfach",GPIO.input(btnParcel),url_Parcel)
         flashLed(ledSend)
@@ -84,9 +89,9 @@ def callbackFuncParcel(channel):
 def callbackFuncParcelDoor(channel):
     try:
         if GPIO.input(channel):
-            message_change = "Empfangen" #+ value
+            message_change = msgDoorOpen
         else:
-            message_change = "Entnommen" #+ value
+            message_change = msgDoorClosed
         # API_Mail.send_status_parcel_Door(message_change,GPIO.input(btnDoorParcel))
         API_Mail.send_status(message,"packetfach",GPIO.input(btnDoorParcel),url_Parcel_Door)
         flashLed(ledSend)
