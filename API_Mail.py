@@ -19,7 +19,7 @@ def getActualDate():
     return actDate
 
 # send status of mailbox to url
-def send_status_mail(Message_change,StatusMail,StatusMailDoor):
+def send_status_mail(Message_change,StatusMail):
     try:
         data = {"status" : Message_change,
                 "brieffach" : StatusMail,
@@ -37,7 +37,7 @@ def send_status_mail(Message_change,StatusMail,StatusMailDoor):
     
     
 # send status of parcel box to url
-def send_status_parcel(Message_change,StatusParcel,StatusParcelDoor):
+def send_status_parcel(Message_change,StatusParcel):
     try:
         data = {"status" : Message_change,
                 "packetfach" : StatusParcel,
@@ -84,3 +84,22 @@ def send_status_parcel_Door(Message_change,StatusParcelDoor):
         response = requests.post(url_Parcel_Door, data = json.dumps(data), headers = headers)
     except:
         raise ValueError("Wrong response")
+    
+def send_status(Message,Part,Status,UrlAdress):
+    try:
+        data = {"status" : Message,
+                Part : Status,
+                "time" : (datetime.now().strftime("%H:%M:%S")),
+                "date" : (datetime.now().strftime("%d-%m-%Y")),
+                }
+        print("data collected")
+    except:
+        raise ValueError("Wrong format of data to transmit")
+    try:
+        print("Try to send status Mail")
+        response = requests.post(UrlAdress, data=json.dumps(data), headers=headers)
+        print("Send okay")
+    except:
+        print("Sending failed")
+        raise ValueError("Send not sucessful")
+    
