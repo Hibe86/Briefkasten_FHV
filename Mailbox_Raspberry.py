@@ -3,16 +3,19 @@ from time import sleep
 import API_Mail
 
 # I/O Pins
+# Input pins
 btnMail = 17
 btnDoorMail = 27
 btnParcel = 22
 btnDoorParcel = 12
-
+# output pins
 ledProgRun = 25
 ledSend = 23
 ledSendError = 24
 ledGeneralError = 8
 
+# ---------------------
+# Variables
 # set URL for API
 
 url_Mail = "https://briefkasten.azurewebsites.net/briefkasten/brief/post"
@@ -20,20 +23,28 @@ url_Parcel = "https://briefkasten.azurewebsites.net/briefkasten/paket/post"
 url_Mail_Door = "https://briefkasten.azurewebsites.net/briefkasten/brieftuere/post"
 url_Parcel_Door = "https://briefkasten.azurewebsites.net/briefkasten/pakettuere/post"
 
-# gerenal Variables
-
+# Global Variables
+# timer variablkes
 bncTime = 500 # time in ms
 slpTime = 0.9 # time in seconds
-flashTime = 0.2 # time in seconds
+flashTime = 0.5 # time in seconds
 
+# Effected part
+prtMail = "brieffach"
+prtMailDoor = "briefkastentuere"
+prtParcel = "packetfach"
+prtParcelDoor = "packetfachtuere"
+
+# Standard messages
 msgMailArrived = "Recived"
 msgMailPicked = "Picked up"
 msgDoorOpen = "Door open"
 msgDoorClosed = "Door closed"
 
+# ---------------------
 # GPIO setup
 GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(True)
+GPIO.setwarnings(False)
 GPIO.setup(btnMail, GPIO.IN)
 GPIO.setup(btnDoorMail, GPIO.IN)
 GPIO.setup(btnParcel, GPIO.IN)
@@ -43,74 +54,108 @@ GPIO.setup(ledSend, GPIO.OUT)
 GPIO.setup(ledSendError, GPIO.OUT)
 GPIO.setup(ledGeneralError, GPIO.OUT)
 
+# Subroutines
 # send LED toggle
 def flashLed(Channel):
-    GPIO.output(Channel, GPIO.HIGH)
-    sleep(flashTime)
-    GPIO.output(Channel, GPIO.LOW)
-
+    """Used to flash an LED that is connected to an output
+Used output set by Main program
+Input Variable: Channel (I/O pin)
+"""
+    try:
+        GPIO.output(Channel, GPIO.HIGH)
+        sleep(flashTime)
+        GPIO.output(Channel, GPIO.LOW)
+    except:
+        raise Exception("Connection to Output not possible")
+    
 # Callback Function
 def callbackFuncMail(channel):
+    """Callback function for Mail delivery:
+Sets the message that is delivered from the API to the Webservice
+Input Variable:
+Channel (I/O setting via Main program)
+
+used Variables:
+message (arrived/picked) set by global declaration)
+prtMail: effected Mailbox part
+GPIO pin
+URL of Webservice
+"""
     try:
         if GPIO.input(channel):
             message = msgMailArrived
         else:
             message = msgMailPicked
-        # API_Mail.send_status_mail(message_change,GPIO.input(btnMail),GPIO.input(btnDoorMail))
-        API_Mail.send_status(message,"brieffach",GPIO.input(btnMail),url_Mail)
+        API_Mail.send_status(message,prtMail,GPIO.input(btnMail),url_Mail)
         flashLed(ledSend)
     except:
         flashLed(ledSendError)
 
 def callbackFuncMailDoor(channel):
+    """Callback function for Mailbox door:
+Sets the message that is delivered from the API to the Webservice
+Input Variable:
+Channel (I/O setting via Main program)
+
+used Variables:
+message (open/closed) set by global declaration)
+prtMailDoor: effected Mailbox part
+GPIO pin
+URL of Webservice
+"""
     try:
         if GPIO.input(channel):
-            message_change = msgDoorOpen
+            message = msgDoorOpen
         else:
-            message_change = msgDoorClosed
-        # API_Mail.send_status_mail_Door(message_change,GPIO.input(btnDoorMail))
-        API_Mail.send_status(message,"briefkastentuere",GPIO.input(btnDoorMail),url_Mail_Door)
+            message = msgDoorClosed
+        API_Mail.send_status(message,prtMailDoor,GPIO.input(btnDoorMail),url_Mail_Door)
         flashLed(ledSend)
     except:
         flashLed(ledSendError)
 
 def callbackFuncParcel(channel):
+    """Callback function for Parcel delivery system:
+Sets the message that is delivered from the API to the Webservice
+Input Variable:
+Channel (I/O setting via Main program)
+
+used Variables:
+message (arrived/picked) set by global declaration)
+prtParcel: effected Mailbox part
+GPIO pin
+URL of Webservice
+"""
     try:
         if GPIO.input(channel):
-            message_change = msgMailArrived
+            message = msgMailArrived
         else:
-            message_change = msgMailPicked
-        #API_Mail.send_status_parcel(message_change,GPIO.input(btnParcel),GPIO.input(btnDoorParcel))
-        API_Mail.send_status(message,"packetfach",GPIO.input(btnParcel),url_Parcel)
+            message = msgMailPicked
+        API_Mail.send_status(message,prtParcel,GPIO.input(btnParcel),url_Parcel)
         flashLed(ledSend)
     except:
         flashLed(ledSendError)
          
 def callbackFuncParcelDoor(channel):
+    """Callback function for Parcel delivery door:
+Sets the message that is delivered from the API to the Webservice
+Input Variable:
+Channel (I/O setting via Main program)
+
+used Variables:
+message (open/closed) set by global declaration)
+prtParcelDoor: effected Mailbox part
+GPIO pin
+URL of Webservice
+"""
     try:
         if GPIO.input(channel):
-            message_change = msgDoorOpen
+            message = msgDoorOpen
         else:
-            message_change = msgDoorClosed
-        # API_Mail.send_status_parcel_Door(message_change,GPIO.input(btnDoorParcel))
-        API_Mail.send_status(message,"packetfach",GPIO.input(btnDoorParcel),url_Parcel_Door)
+            message = msgDoorClosed
+        API_Mail.send_status(message,prtParcelDoor,GPIO.input(btnDoorParcel),url_Parcel_Door)
         flashLed(ledSend)
     except:
         flashLed(ledSendError)
-
-# Test program for API
-# def testFunc(ChannelStatus,MailBoxPart):
-#     try:
-#         print("Testfunktion gestartet")
-#         if ChannelStatus:
-#             message="Offen"
-#         else:
-#             message="Geschlossen"
-#         print("Testfunktion vorbereiten senden")
-#         API_Mail.send_status(message,MailBoxPart,ChannelStatus,url_Mail_Door)
-#         print("Testfunktion gesendet")
-#     except:
-#         print("Testfunktion fehlerhaft")
         
 # Definition of action set by change of PIN status
 
@@ -119,15 +164,42 @@ GPIO.add_event_detect(btnDoorMail, GPIO.BOTH, callback = callbackFuncMailDoor, b
 GPIO.add_event_detect(btnParcel, GPIO.BOTH, callback = callbackFuncParcel, bouncetime=bncTime)
 GPIO.add_event_detect(btnDoorParcel, GPIO.BOTH, callback = callbackFuncParcelDoor, bouncetime=bncTime)
 
-
+# ----------------------------------
 # Main programm
+# ----------------------------------
+# set LED to status
+GPIO.output(ledGeneralError, GPIO.LOW)
+GPIO.output(ledProgRun, GPIO.HIGH)
+# Initial status send to API
+try:
+    if GPIO.input(btnMail):
+        message=msgMailArrived
+    else:
+        message=msgMailPicked
+    API_Mail.send_status(message,prtMail,GPIO.input(btnMail),url_Mail)
+    if GPIO.input(btnDoorMail):
+        message=msgDoorClosed
+    else:
+        message=msgDoorOpen
+    API_Mail.send_status(message,prtMailDoor,GPIO.input(btnDoorMail),url_Mail_Door)
+    if GPIO.input(btnParcel):
+        message=msgMailArrived
+    else:
+        message=msgMailPicked
+    API_Mail.send_status(message,prtParcel,GPIO.input(btnParcel),url_Parcel)
+    if GPIO.input(btnDoorParcel):
+        message=msgDoorClosed
+    else:
+        message=msgDoorOpen
+    API_Mail.send_status(message,prtParcelDoor,GPIO.input(btnDoorParcel),url_Parcel_Door)
+    flashLed(ledSend)
+except:
+    GPIO.output(ledProgRun, GPIO.LOW)
+    GPIO.output(ledGeneralError, GPIO.HIGH)
+    GPIO.cleanup()
+
 while True:
-    GPIO.output(ledGeneralError, GPIO.LOW)
     try:
-#         testFunc(1,"briefkastentuere")
-#         sleep(slpTime)
-#         testFunc(0,"briefkastentuere")
-        GPIO.output(ledProgRun, GPIO.HIGH)
         sleep(slpTime)
     except:
         GPIO.output(ledProgRun, GPIO.LOW)
